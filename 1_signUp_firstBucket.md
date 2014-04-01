@@ -13,7 +13,7 @@
 ####二. 登录和验证    
 
 &nbsp;&nbsp;&nbsp;&nbsp;简洁至上的 upyun 登录界面输入```云存储帐号```和```登录密码```以后, 进入后台我们首先看到的是验证手机号码的界面.    
-![Alt Certification](http://upyun-blog-pic.b0.upaiyun.com/upyunBlog/Certification.png)
+![Alt Certification](http://upyun-blog-pic.b0.upaiyun.com/upyunBlog/Certiftion.png)
  &nbsp;&nbsp;&nbsp;&nbsp;点击**发送验证码** upyun 将会发送一条六位数字的验证码到手机上, 然后验证通过就可以看见空间的真实面目了.    
  &nbsp;&nbsp;&nbsp;&nbsp;验证手机号码和邮箱都是必需的步骤, 如果这个时候手机或者邮箱都收不到验证短信或邮件. 也可以通过客服QQ: ```1346754578``` 或者电话: ```0571-81020203 81020204```确认一下.
 
