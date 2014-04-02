@@ -28,7 +28,7 @@
 ####三. 创建一个图片空间    
 &nbsp;&nbsp;&nbsp;&nbsp;要知道，空间可是我们用来放文件的地方，说了半天我们还不知道它具体是怎么回事。别急， 这就开始创建我们第一个```图片空间```。    
 &nbsp;&nbsp;&nbsp;&nbsp;图片空间，顾名思义，这是一种只能存放图片类型文件的空间。图片空间不仅拥有国内先进的 cdn 网络加速，更拥有强大的图片后期处理能力。创建的步骤很简单，点击后台主页左上角的『选择空间』然后点击『创建空间』     
-&nbsp;&nbsp;&nbsp;&nbsp;![Alt createBucket](http://upyun-blog-pic.b0.upaiyun.com/upyunBlog/createBucket.png)    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Alt createBucket](http://upyun-blog-pic.b0.upaiyun.com/upyunBlog/createBucket.png)    
 &nbsp;&nbsp;&nbsp;&nbsp;这个时候我们会看见弹出来一个创建空间的窗口，在给空间起一个响亮的名字以后，我们先选择```空间类型```为『图片类』，空间配额我们通常方便随时扩容而留空。    
 ![Alt createBucket](http://upyun-blog-pic.b0.upaiyun.com/upyunBlog/createPICBucket.png)    
 &nbsp;&nbsp;&nbsp;&nbsp;然后点击第二步我们到了授权```操作员```的步骤。    
