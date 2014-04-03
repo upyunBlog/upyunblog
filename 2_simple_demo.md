@@ -32,13 +32,4 @@ v0.api.upyun.com (自动判断）    <=======(我们习惯选择它)
 ```    
 
 &nbsp;&nbsp;&nbsp;&nbsp;API 接口方式上传基于 http 协议。所以我们这里使用 put 方式上传文件到 upyun 的 API 接口。    
-&nbsp;&nbsp;&nbsp;&nbsp;首先我们根据接口文档一个实现 http put 的 Python 方法    
-
-```
-def put(uri, value, checksum=False, headers=None):
-    if headers is None:
-        headers = {}
-    headers['Mkdir'] = 'true'
-    
-
-```
+&nbsp;&nbsp;&nbsp;&nbsp;首先我们为了开发节省时间, 我们可以去【[开发资源](http://wiki.upyun.com/index.php?title=%E5%BC%80%E5%8F%91%E8%B5%84%E6%BA%90)】中找到适合自己的 sdk 代码。任何一个sdk 下载下来我们都会发现有一个已经写好的供调用的接口方法，比如 upyun.py；upyun.php；upyun.java 等等。
