@@ -28,4 +28,105 @@
 &nbsp;&nbsp;&nbsp;&nbsp;![Alt pic](http://upyun-blog-pic.b0.upaiyun.com/upyunBlog/purge.png)    
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;除了后台的手动刷新，目前又拍云还提供一个[缓存刷新的 API 接口](http://wiki.upyun.com/index.php?title=%E7%BC%93%E5%AD%98%E5%88%B7%E6%96%B0API%E6%8E%A5%E5%8F%A3)。可以直接通过程序来刷新指定的文件外链。     
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;缓存刷新目前用的最多的地方应该是在```使用静态 CDN 空间的时候```：当源站的文件有变动（修改，删除等）操作的时候，需要主动调用缓存刷新 API 接口来告诉 CDN 网络源站文件有更新。否则我们在访问的时候还是会访问到各个节点的老的缓存。    
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下面我们用 Python 来根据缓存刷新 API 文档实现一个刷新程序。    
+
+
+```
+
+#!/usr/bin/env python
+#-*-coding:utf-8-*-
+
+import urllib
+import hashlib
+import datetime
+import requests
+
+#========config_begin======
+BUCKETNAME = 'bucketname'
+USERNAME = 'username'
+PASSWORD = 'password'
+purge = 'your_URL'
+#========config_end========
+```    
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们在 Python 中使用了 requests 这个非常优秀的轮子, 所以 put 操作显得非常简单。当然不熟悉 Python 的同学只要了解到它是最后将我们的请求发送到 upyun 空间的模块就定了。    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后我们需要传递的参数还是这些：```空间名```，```操作员名```，```操作员密码```，```需要刷新的 URL```。当然，真正集成到项目中去的时候，```需要刷新的 URL```这肯定是另一种传递方式。    
+    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我们来看一下请求方法：
+
+```
+    POST /purge/ HTTP/1.1
+    Host: purge.upyun.com
+    Authorization: UpYun demo_bucket:demouser:62c428533830d84fd8bc77bf402512fc
+    Date: Wed, 24 Aug 2011 07:33:47 GMT
+    Content-Type: application/x-www-form-urlencoded
+```    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http 请求头里面我们需要传递的header 是```Authorization```，```Date```，```Content-Type```。所以我们的主要目标是组成这些字段。    
+
++ ```Date```：Date 需要一个 GMT 格式的时间，也就是（D, d M Y H:i:s \G\M\T）这种格式。    
++ ```Authorization```：UpYun ```空间名```:```操作员名```:```sign```    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其中```sign```的制作方法为：sign = md5(需要刷新的URL + & + 空间名 + & + Date + & + md5(操作员密码))    
+    
+最后，我们根据这个规则将各个字段通过字符串拼接起来。用 Python 实现如下：
+
+```
+def httpdate_rfc1123(dt):
+    """Return a string representation of a date according to RFC 1123
+    (HTTP/1.1).
+
+    The supplied date must be in UTC.
+    """
+    weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][dt.weekday()]
+    month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+             "Oct", "Nov", "Dec"][dt.month - 1]
+    return "%s, %02d %s %04d %02d:%02d:%02d GMT" % \
+        (weekday, dt.day, month, dt.year, dt.hour, dt.minute, dt.second)
+
+
+
+
+date = httpdate_rfc1123(datetime.datetime.utcnow())
+sign = hashlib.md5(purge+"&"+BUCKETNAME+"&" +
+                       date + "&" + hashlib.md5(PASSWORD).hexdigest()).hexdigest()
+```    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后，我们将准备好的 参数传入 headers，然后通过 http post 到 api 接口，就可以了，具体的 Python 例子如下：
+    
+```
+Header = {"Expect": "",
+          "Authorization": 'UpYun '+BUCKETNAME+':'+USERNAME+':'+sign,
+          "Date": date,
+          "Content-Type": "application/x-www-form-urlencoded",
+          }
+post = urllib.urlencode({'purge': purge})
+r = requests.post("http://purge.upyun.com/purge/", post, headers=Header)
+print r.text
+
+```    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后我们可以根据 r.text 即 API 接口返回的内容来判断我们是否已经刷新成功。以下是 API 接口返回来的常见的信息，仅供参考：    
+
+```   
+   200：json格式的字符串{invalid_domain_of_url:不属于自己域名的url列表} 
+   401：无认证头部信息（Authorization）（提示信息：Need Authorization Header）
+   401：无认证头部信息（Date）（提示信息：Need Date Header）
+   401：操作员不存在（提示信息：User is not exists）
+   401：空间名不存在（提示信息：Bucket is not exists）
+   401：请求时间超出30分钟（提示信息：Date offset error）
+   401：签名错误（提示信息：Sign error）
+   406：每分钟刷新URL个数超过600限制
+      （提示信息：URL [url] 之后的数据未能加入刷新队列，原因：每分钟刷新数量已经超过限制。）
+
+```    
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里有一个容易让人困惑的地方。那就是刷新成功后，返回的是一个{invalid_domain_url:[]}。这个内容很容易让人觉得是错误的信息。但是事实上，这是一个表示刷新成功的提示。首先，它返回的是200状态码，然后 ```invalid_domain_url:[]```列表为空的时候表示没有非法的刷新 URL。如果```invalid_domain_url:[]```里面出现了一个 URL，那就是在告诉我们传入了一个不属于我们空间的 URL。 
+       
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;好了，到目前为止，我们也已经看过```流量统计``` ```日志分析``` ```缓存刷新```三大块内容了，如果有不清楚的地方那个，欢迎留言。    
+####四. 接下来讲什么呢?    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;空间后台的菜单选项我们大致已经了解过了。接下来，我们将去非常详细的了解一下 upyun 的 API 接口。看看我们究竟能通过这些接口做哪些具体的事情。  
+      
+----------    
+如有疑惑或者建议，欢迎评论。        
+如果你希望有更直接的互动，欢迎加QQ群：```230558018```        
+
+[-NEXT-](#)    
+【[UPYUN](https://www.upyun.com) © 2014 署名-非商业性使用-禁止演绎】
+
